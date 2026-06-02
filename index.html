@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aplikasi Keuangan Rekap Otomatis Online</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      padding: 20px;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background-color: #1a2a6c;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.8em;
+      font-weight: 700;
+      border-bottom: 3px solid #b21f1f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      position: relative;
+    }
+
+    .header i {
+      font-size: 1.2em;
+    }
+
+    .info-icon {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 15px 0;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #555;
+      background-color: #f8f8f8;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      border-right: 1px solid #eee;
+    }
+
+    .tab-button:last-child {
+      border-right: none;
+    }
+
+    .tab-button.active {
+      background-color: #1a2a6c;
+      color: #fff;
+      border-bottom: 3px solid #b21f1f;
+      margin-bottom: -1px;
+    }
+
+    .tab-content {
+      padding: 25px;
+      display: none;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .balance-section {
+      text-align: center;
+      margin-bottom: 25px;
+      background-color: #ecf0f1;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .balance-label {
+      font-size: 1.1em;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .total-balance {
+      font-size: 2.8em;
+      font-weight: 700;
+      color: #2c3e50;
+      letter-spacing: -0.5px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-section {
+      background-color: #fefefe;
+      padding: 25px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-section h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 1.5em;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #444;
+      font-size: 0.95em;
+    }
+
+    .form-group input[type="number"],
+    .form-group input[type="text"],
+    .form-group input[type="date"],
+    .form-group input[type="time"],
+    .form-group select {
+      width: calc(100% - 20px);
+      padding: 12px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1em;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background-color: #fdfdfd;
+    }
+
+    .form-group input[type="number"]:focus,
+    .form-group input[type="text"]:focus,
+    .form-group input[type="date"]:focus,
+    .form-group input[type="time"]:focus,
+    .form-group select:focus {
+      border-color: #1a2a6c;
+      box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+      outline: none;
+    }
+
+    .form-group button {
+      width: 100%;
+      padding: 14px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .form-group button:hover {
+      background-color: #218838;
+      transform: translateY(-2px);
+    }
+
+    .transaction-list-section {
+      background-color: #fefefe;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .transaction-list-section h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 1.5em;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .filter-section {
+      background-color: #ecf0f1;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .filter-header {
+      font-size: 1.2em;
+      font-weight: 600;
+      color: #34495e;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .filter-control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.9em;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .filter-control select,
+    .filter-control input[type="date"],
+    .filter-control input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 0.95em;
+      background-color: #fff;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .filter-buttons button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-buttons button#applyFilterBtn {
+      background-color: #3498db;
+      color: #fff;
+    }
+
+    .filter-buttons button#applyFilterBtn:hover {
+      background-color: #2980b9;
+    }
+
+    .filter-buttons button.reset-btn {
+      background-color: #95a5a6;
+      color: #fff;
+    }
+
+    .filter-buttons button.reset-btn:hover {
+      background-color: #7f8c8d;
+    }
+
+    .transaction-list {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+
+    .transaction-list table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .transaction-list th,
+    .transaction-list td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95em;
+    }
+
+    .transaction-list th {
+      background-color: #f2f2f2;
+      color: #555;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .transaction-list tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .transaction-list td.positive {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .transaction-list td.negative {
+      color: #dc3545;
+      font-weight: 600;
+    }
+
+    .transaction-list .time-highlight {
+      font-size: 0.85em;
+      color: #777;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .action-buttons button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.85em;
+      transition: background-color 0.3s ease;
+    }
+
+    .action-buttons .edit-btn {
+      background-color: #ffc107;
+      color: #333;
+    }
+
+    .action-buttons .edit-btn:hover {
+      background-color: #e0a800;
+    }
+
+    .action-buttons .delete-btn {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .action-buttons .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    .recap-section {
+      padding: 25px;
+      background-color: #fefefe;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .recap-section h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 1.5em;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .recap-controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .recap-controls select {
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1em;
+      background-color: #fdfdfd;
+      min-width: 120px;
+    }
+
+    .recap-summary {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .recap-box {
+      flex: 1;
+      padding: 18px;
+      border-radius: 8px;
+      margin: 0 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .recap-box.income {
+      background-color: #e6ffee;
+      border: 1px solid #2ecc71;
+    }
+
+    .recap-box.expense {
+      background-color: #ffe6e6;
+      border: 1px solid #e74c3c;
+    }
+
+    .recap-box.balance {
+      background-color: #e6f7ff;
+      border: 1px solid #3498db;
+    }
+
+    .recap-box .label {
+      font-size: 1em;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .recap-box .amount {
+      font-size: 1.8em;
+      font-weight: 700;
+    }
+
+    .recap-box.income .amount { color: #28a745; }
+    .recap-box.expense .amount { color: #dc3545; }
+    .recap-box.balance .amount { color: #3498db; }
+
+    .recap-chart-container {
+      margin-bottom: 25px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .chart-title {
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .recap-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .recap-table th,
+    .recap-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95em;
+    }
+
+    .recap-table th {
+      background-color: #f2f2f2;
+      color: #555;
+      font-weight: 600;
+    }
+
+    .recap-table tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .recap-table .pemasukan {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .recap-table .pengeluaran {
+      color: #dc3545;
+      font-weight: 600;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+      text-align: center;
+    }
+
+    .close-button {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+      color: #333;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 1.8em;
+    }
+
+    .modal-content p {
+      font-size: 1.1em;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .modal-content p strong {
+      color: #1a2a6c;
+    }
+
+    @media (max-width: 768px) {
+      .container { margin: 10px; border-radius: 8px; }
+      .header { font-size: 1.5em; padding: 15px; }
+      .tabs { flex-direction: column; }
+      .tab-button { border-right: none; border-bottom: 1px solid #eee; }
+      .tab-button.active { border-bottom: 3px solid #b21f1f; }
+      .tab-content { padding: 15px; }
+      .balance-section { padding: 15px; }
+      .total-balance { font-size: 2.2em; }
+      .form-section, .transaction-list-section, .recap-section { padding: 15px; }
+      .filter-controls { grid-template-columns: 1fr; }
+      .filter-buttons { flex-direction: column; }
+      .recap-summary { flex-direction: column; gap: 15px; }
+      .recap-box { margin: 0; }
+      .recap-box .amount { font-size: 1.5em; }
+      .recap-table th, .recap-table td { padding: 8px 10px; font-size: 0.85em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <i class="fas fa-wallet"></i> Aplikasi Keuangan Pribadi (Cloud Online)
+      <span class="info-icon" id="infoIcon"><i class="fas fa-info-circle"></i></span>
+    </div>
+
+    <div class="tabs">
+      <div class="tab-button active" data-tab="input-tab">
+        <i class="fas fa-plus-circle"></i> Input Transaksi
+      </div>
+      <div class="tab-button" data-tab="list-tab">
+        <i class="fas fa-list"></i> Daftar Transaksi
+      </div>
+      <div class="tab-button" data-tab="recap-tab">
+        <i class="fas fa-chart-line"></i> Rekap Keuangan
+      </div>
+    </div>
+
+    <div id="input-tab" class="tab-content active">
+      <div class="balance-section">
+        <div class="balance-label">Saldo Saat Ini</div>
+        <div class="total-balance" id="totalBalance">Rp 0</div>
+      </div>
+
+      <div class="form-section">
+        <h3><i class="fas fa-money-check-alt"></i> Tambah Transaksi Baru</h3>
+        <div class="form-group">
+          <label for="transactionAmount">Jumlah (Rp)</label>
+          <input type="text" id="transactionAmount" placeholder="Contoh: 50.000" required>
+        </div>
+        <div class="form-group">
+          <label for="transactionDescription">Keterangan</label>
+          <input type="text" id="transactionDescription" placeholder="Contoh: Beli makan siang" required>
+        </div>
+        <div class="form-group">
+          <label for="transactionType">Jenis Transaksi</label>
+          <select id="transactionType">
+            <option value="income">Pemasukan</option>
+            <option value="expense">Pengeluaran</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="transactionDate">Tanggal</label>
+          <input type="date" id="transactionDate" required>
+        </div>
+        <div class="form-group">
+          <label for="transactionTime">Waktu</label>
+          <input type="time" id="transactionTime" required>
+        </div>
+        <div class="form-group">
+          <button id="addTransactionBtn"><i class="fas fa-plus"></i> Tambah Transaksi</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="list-tab" class="tab-content">
+      <div class="transaction-list-section">
+        <h3><i class="fas fa-clipboard-list"></i> Daftar Transaksi</h3>
+
+        <div class="filter-section">
+          <div class="filter-header">
+            <i class="fas fa-filter"></i> Filter Transaksi
+          </div>
+          <div class="filter-controls">
+            <div class="filter-control">
+              <label for="filterType"><i class="fas fa-exchange-alt"></i> Jenis Transaksi</label>
+              <select id="filterType">
+                <option value="all">Semua Jenis</option>
+                <option value="income">Pemasukan</option>
+                <option value="expense">Pengeluaran</option>
+              </select>
+            </div>
+            <div class="filter-control">
+              <label for="filterMonth"><i class="fas fa-calendar-alt"></i> Bulan</label>
+              <select id="filterMonth">
+                <option value="all">Semua Bulan</option>
+                <option value="01">Januari</option>
+                <option value="02">Februari</option>
+                <option value="03">Maret</option>
+                <option value="04">April</option>
+                <option value="05">Mei</option>
+                <option value="06">Juni</option>
+                <option value="07">Juli</option>
+                <option value="08">Agustus</option>
+                <option value="09">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="filter-control">
+              <label for="filterDate"><i class="fas fa-calendar-day"></i> Tanggal Spesifik</label>
+              <input type="date" id="filterDate">
+            </div>
+            <div class="filter-control">
+              <label for="filterDescription"><i class="fas fa-search"></i> Keterangan</label>
+              <input type="text" id="filterDescription" placeholder="Cari keterangan...">
+            </div>
+          </div>
+          <div class="filter-buttons">
+            <button id="applyFilterBtn"><i class="fas fa-check"></i> Terapkan Filter</button>
+            <button id="resetFilterBtn" class="reset-btn"><i class="fas fa-redo"></i> Reset Filter</button>
+          </div>
+        </div>
+
+        <div class="transaction-list">
+          <table id="transactionTable">
+            <thead>
+              <tr>
+                <th>Tanggal & Waktu</th>
+                <th>Keterangan</th>
+                <th>Jenis</th>
+                <th>Jumlah</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="recap-tab" class="tab-content">
+      <div class="recap-section">
+        <h3><i class="fas fa-chart-bar"></i> Rekap Keuangan Tahunan/Bulanan</h3>
+
+        <div class="recap-controls">
+          <select id="recapYear"></select>
+          <select id="recapMonth">
+            <option value="all">Semua Bulan</option>
+            <option value="01">Januari</option>
+            <option value="02">Februari</option>
+            <option value="03">Maret</option>
+            <option value="04">April</option>
+            <option value="05">Mei</option>
+            <option value="06">Juni</option>
+            <option value="07">Juli</option>
+            <option value="08">Agustus</option>
+            <option value="09">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+          </select>
+        </div>
+
+        <div class="recap-summary">
+          <div class="recap-box income">
+            <div class="label">Total Pemasukan</div>
+            <div class="amount" id="recapTotalIncome">Rp 0</div>
+          </div>
+          <div class="recap-box expense">
+            <div class="label">Total Pengeluaran</div>
+            <div class="amount" id="recapTotalExpense">Rp 0</div>
+          </div>
+          <div class="recap-box balance">
+            <div class="label">Saldo Bersih</div>
+            <div class="amount" id="recapNetBalance">Rp 0</div>
+          </div>
+        </div>
+
+        <div class="recap-chart-container">
+          <div class="chart-title">Distribusi Pemasukan dan Pengeluaran</div>
+          <canvas id="recapPieChart" height="260"></canvas>
+        </div>
+
+        <div class="filter-section">
+          <div class="filter-header">
+            <i class="fas fa-filter"></i> Filter Rincian Rekap
+          </div>
+          <div class="filter-controls">
+            <div class="filter-control">
+              <label for="recapFilterType"><i class="fas fa-exchange-alt"></i> Jenis Transaksi</label>
+              <select id="recapFilterType">
+                <option value="all">Semua Jenis</option>
+                <option value="income">Pemasukan</option>
+                <option value="expense">Pengeluaran</option>
+              </select>
+            </div>
+            <div class="filter-control">
+              <label for="recapFilterDescription"><i class="fas fa-search"></i> Keterangan</label>
+              <input type="text" id="recapFilterDescription" placeholder="Cari keterangan...">
+            </div>
+            <div class="filter-control">
+              <label for="recapFilterStartDate"><i class="fas fa-calendar-alt"></i> Tanggal Mulai</label>
+              <input type="date" id="recapFilterStartDate">
+            </div>
+            <div class="filter-control">
+              <label for="recapFilterEndDate"><i class="fas fa-calendar-alt"></i> Tanggal Akhir</label>
+              <input type="date" id="recapFilterEndDate">
+            </div>
+          </div>
+          <div class="filter-buttons">
+            <button id="applyRecapFilterBtn"><i class="fas fa-check"></i> Terapkan Filter Rekap</button>
+            <button id="resetRecapFilterBtn" class="reset-btn"><i class="fas fa-redo"></i> Reset Filter Rekap</button>
+          </div>
+        </div>
+        <table class="recap-table">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Tanggal & Waktu</th>
+              <th>Keterangan</th>
+              <th>Jenis</th>
+              <th>Jumlah</th>
+            </tr>
+          </thead>
+          <tbody id="recapTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>Tentang Aplikasi</h2>
+      <p>Aplikasi ini menyimpan data secara realtime dan otomatis ke server Google Firebase milik Anda secara online.</p>
+      <p>Aplikasi dikembangkan secara kustom untuk mengelola pencatatan keuangan pribadi.</p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <script>
+    // Memasukkan Kode Config Otomatis Berdasarkan Akun Firebase Kamu
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0ohk8rY0ngaVNnbcsYL_lXHHqhrBb93A",
+      authDomain: "keuangan-pribadi-8d0ec.firebaseapp.com",
+      databaseURL: "https://keuangan-pribadi-8d0ec-default-rtdb.firebaseio.com/",
+      projectId: "keuangan-pribadi-8d0ec",
+      storageBucket: "keuangan-pribadi-8d0ec.firebasestorage.app",
+      messagingSenderId: "977357987187",
+      appId: "1:977357987187:web:c81c15f12a5d679df83906",
+      measurementId: "G-FYQPF9Y0H0"
+    };
+
+    // Inisialisasi Koneksi Server Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let transactions = [];
+
+    Chart.register(ChartDataLabels);
+
+    const totalBalanceEl = document.getElementById('totalBalance');
+    const transactionAmountEl = document.getElementById('transactionAmount');
+    const transactionDescriptionEl = document.getElementById('transactionDescription');
+    const transactionTypeEl = document.getElementById('transactionType');
+    const transactionDateEl = document.getElementById('transactionDate');
+    const transactionTimeEl = document.getElementById('transactionTime');
+    const addTransactionBtn = document.getElementById('addTransactionBtn');
+    const transactionTableBody = document.querySelector('#transactionTable tbody');
+
+    const filterTypeEl = document.getElementById('filterType');
+    const filterMonthEl = document.getElementById('filterMonth');
+    const filterDateEl = document.getElementById('filterDate');
+    const filterDescriptionEl = document.getElementById('filterDescription');
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    const resetFilterBtn = document.getElementById('resetFilterBtn');
+
+    const recapTotalIncomeEl = document.getElementById('recapTotalIncome');
+    const recapTotalExpenseEl = document.getElementById('recapTotalExpense');
+    const recapNetBalanceEl = document.getElementById('recapNetBalance');
+    const recapTableBody = document.getElementById('recapTableBody');
+
+    let recapPieChart = null;
+
+    const infoModal = document.getElementById('infoModal');
+    const infoIcon = document.getElementById('infoIcon');
+    const closeButton = document.querySelector('.close-button');
+
+    function formatNumber(num) {
+      return new Intl.NumberFormat('id-ID').format(num);
+    }
+
+    function parseRupiahToNumber(rupiahString) {
+      return parseFloat(rupiahString.replace(/[^,\d]/g, '').replace('.', '').replace(',', '.'));
+    }
+
+    transactionAmountEl.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\./g, '');
+      if (value) {
+        value = parseInt(value, 10);
+        if (!isNaN(value)) {
+          e.target.value = formatNumber(value);
+        } else {
+          e.target.value = '';
+        }
+      }
+    });
+
+    function setDateTimeDefaults() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = (today.getMonth() + 1).toString().padStart(2, '0');
+      const day = today.getDate().toString().padStart(2, '0');
+      const hours = today.getHours().toString().padStart(2, '0');
+      const minutes = today.getMinutes().toString().padStart(2, '0');
+
+      transactionDateEl.value = `${year}-${month}-${day}`;
+      transactionTimeEl.value = `${hours}:${minutes}`;
+    }
+
+    function calculateTotals() {
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      transactions.forEach(t => {
+        if (t.type === 'income') {
+          totalIncome += t.amount;
+        } else {
+          totalExpense += t.amount;
+        }
+      });
+
+      const netBalance = totalIncome - totalExpense;
+      totalBalanceEl.textContent = `Rp ${formatNumber(netBalance)}`;
+    }
+
+    // Mengambil data secara realtime otomatis dari server online Firebase Google
+    db.ref('transactions').on('value', (snapshot) => {
+      const data = snapshot.val();
+      transactions = [];
+      if (data) {
+        Object.keys(data).forEach(key => {
+          transactions.push({ id: key, ...data[key] });
+        });
+      }
+      calculateTotals();
+      renderTransactions(applyFilter());
+      updateRecap();
+    });
+
+    function addTransactionHandler() {
+      const amountFormatted = transactionAmountEl.value;
+      const amount = parseRupiahToNumber(amountFormatted);
+      const description = transactionDescriptionEl.value.trim();
+      const type = transactionTypeEl.value;
+      const date = transactionDateEl.value;
+      const time = transactionTimeEl.value;
+
+      if (isNaN(amount) || amount <= 0 || description === '' || date === '' || time === '') {
+        alert('Mohon lengkapi semua kolom dengan benar.');
+        return;
+      }
+
+      const newTransaction = { amount, description, type, date, time };
+
+      // Simpan langsung ke Server Firebase Cloud
+      db.ref('transactions').push(newTransaction)
+        .then(() => {
+          transactionAmountEl.value = '';
+          transactionDescriptionEl.value = '';
+          setDateTimeDefaults();
+        })
+        .catch(err => alert("Gagal menyimpan data online: " + err.message));
+    }
+    addTransactionBtn.addEventListener('click', addTransactionHandler);
+
+    function deleteTransaction(id) {
+      if (confirm('Apakah Anda yakin ingin menghapus transaksi ini dari database cloud?')) {
+        db.ref('transactions/' + id).remove()
+          .catch(err => alert("Gagal menghapus data online: " + err.message));
+      }
+    }
+
+    function editTransaction(id) {
+        const transaction = transactions.find(t => t.id === id);
+        if (!transaction) return;
+
+        transactionAmountEl.value = formatNumber(transaction.amount);
+        transactionDescriptionEl.value = transaction.description;
+        transactionTypeEl.value = transaction.type;
+        transactionDateEl.value = transaction.date;
+        transactionTimeEl.value = transaction.time;
+
+        addTransactionBtn.textContent = 'Update Transaksi Online';
+        addTransactionBtn.removeEventListener('click', addTransactionHandler);
+
+        addTransactionBtn.onclick = () => {
+            const updatedAmountFormatted = transactionAmountEl.value;
+            const updatedAmount = parseRupiahToNumber(updatedAmountFormatted);
+
+            const updatedData = {
+              amount: updatedAmount,
+              description: transactionDescriptionEl.value.trim(),
+              type: transactionTypeEl.value,
+              date: transactionDateEl.value,
+              time: transactionTimeEl.value
+            };
+
+            if (isNaN(updatedData.amount) || updatedData.amount <= 0 || updatedData.description === '' || updatedData.date === '' || updatedData.time === '') {
+                alert('Mohon lengkapi semua kolom dengan benar.');
+                return;
+            }
+
+            db.ref('transactions/' + id).set(updatedData)
+              .then(() => {
+                transactionAmountEl.value = '';
+                transactionDescriptionEl.value = '';
+                setDateTimeDefaults();
+                addTransactionBtn.textContent = 'Tambah Transaksi';
+                addTransactionBtn.onclick = null;
+                addTransactionBtn.addEventListener('click', addTransactionHandler);
+              })
+              .catch(err => alert("Gagal mengupdate data online: " + err.message));
+        };
+
+        document.querySelector('.tab-button[data-tab="input-tab"]').click();
+    }
+
+    window.editTransaction = editTransaction;
+    window.deleteTransaction = deleteTransaction;
+
+    function renderTransactions(filtered = transactions) {
+      transactionTableBody.innerHTML = '';
+
+      filtered.sort((a, b) =>
+        new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time)
+      ).forEach(t => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${t.date} <span class="time-highlight">${t.time}</span></td>
+          <td>${t.description}</td>
+          <td>${t.type === 'income' ? '<span class="pemasukan">Pemasukan</span>' : '<span class="pengeluaran">Pengeluaran</span>'}</td>
+          <td class="${t.type === 'income' ? 'positive' : 'negative'}">Rp ${t.type === 'income' ? '' : '-'} ${formatNumber(t.amount)}</td>
+          <td class="action-buttons">
+            <button class="edit-btn" onclick="editTransaction('${t.id}')">Edit</button>
+            <button class="delete-btn" onclick="deleteTransaction('${t.id}')">Hapus</button>
+          </td>
+        `;
+        transactionTableBody.appendChild(row);
+      });
+    }
+
+    function updateRecapPieChart(income, expense) {
+      const pieCtx = document.getElementById('recapPieChart').getContext('2d');
+      if (recapPieChart) recapPieChart.destroy();
+
+      recapPieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Pemasukan', 'Pengeluaran'],
+          datasets: [{
+            data: [income, expense],
+            backgroundColor: ['#2ecc71', '#e74c3c'],
+            hoverOffset: 10,
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            datalabels: {
+              color: '#fff',
+              formatter: (value, context) => {
+                const total = context.dataset.data.reduce((sum, current) => sum + current, 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                if (percentage === "0.0") return '';
+                return percentage + '%';
+              },
+              font: { weight: 'bold', size: 14 }
+            }
+          }
+        }
+      });
+    }
+
+    function updateRecap() {
+      const selectedYear = document.getElementById('recapYear').value;
+      const selectedMonth = document.getElementById('recapMonth').value;
+
+      const recapFilterType = document.getElementById('recapFilterType').value;
+      const recapFilterDescription = document.getElementById('recapFilterDescription').value.toLowerCase();
+      const recapFilterStartDate = document.getElementById('recapFilterStartDate').value;
+      const recapFilterEndDate = document.getElementById('recapFilterEndDate').value;
+
+      let filteredTransactionsForRecap = transactions.filter(t => t.date && t.date.startsWith(selectedYear));
+
+      if (selectedMonth !== 'all') {
+        filteredTransactionsForRecap = filteredTransactionsForRecap.filter(t => t.date.split('-')[1] === selectedMonth);
+      }
+
+      if (recapFilterType !== 'all') { filteredTransactionsForRecap = filteredTransactionsForRecap.filter(t => t.type === recapFilterType); }
+      if (recapFilterDescription) { filteredTransactionsForRecap = filteredTransactionsForRecap.filter(t => t.description.toLowerCase().includes(recapFilterDescription)); }
+      if (recapFilterStartDate) { filteredTransactionsForRecap = filteredTransactionsForRecap.filter(t => t.date >= recapFilterStartDate); }
+      if (recapFilterEndDate) { filteredTransactionsForRecap = filteredTransactionsForRecap.filter(t => t.date <= recapFilterEndDate); }
+
+      let recapIncome = 0; let recapExpense = 0;
+      filteredTransactionsForRecap.forEach(t => {
+        if (t.type === 'income') { recapIncome += t.amount; } else { recapExpense += t.amount; }
+      });
+
+      const recapNetBalance = recapIncome - recapExpense;
+
+      recapTotalIncomeEl.textContent = `Rp ${formatNumber(recapIncome)}`;
+      recapTotalExpenseEl.textContent = `Rp ${formatNumber(recapExpense)}`;
+      recapNetBalanceEl.textContent = `Rp ${formatNumber(recapNetBalance)}`;
+
+      updateRecapPieChart(recapIncome, recapExpense);
+      
+      recapTableBody.innerHTML = '';
+      filteredTransactionsForRecap.sort((a, b) =>
+        new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time)
+      ).forEach((t, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}.</td>
+          <td>${t.date} <span class="time-highlight">${t.time}</span></td>
+          <td>${t.description}</td>
+          <td>${t.type === 'income' ? '<span class="pemasukan">Pemasukan</span>' : '<span class="pengeluaran">Pengeluaran</span>'}</td>
+          <td class="${t.type === 'income' ? 'positive' : 'negative'}">Rp ${t.type === 'income' ? '' : '-'} ${formatNumber(t.amount)}</td>
+        `;
+        recapTableBody.appendChild(row);
+      });
+    }
+
+    function populateYearSelect() {
+      const currentYear = new Date().getFullYear();
+      const recapYearSelect = document.getElementById('recapYear');
+      recapYearSelect.innerHTML = '';
+      for (let year = currentYear + 25; year >= 2020; year--) {
+        const option = document.createElement('option');
+        option.value = year; option.textContent = year;
+        recapYearSelect.appendChild(option);
+      }
+      recapYearSelect.value = currentYear;
+    }
+
+    function setupTabs() {
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const tabId = button.dataset.tab;
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+
+          button.classList.add('active');
+          document.getElementById(tabId).classList.add('active');
+
+          if (tabId === 'list-tab') { renderTransactions(applyFilter()); } 
+          else if (tabId === 'recap-tab') { updateRecap(); }
+        });
+      });
+    }
+
+    function applyFilter() {
+      const filterType = filterTypeEl.value;
+      const filterDate = filterDateEl.value;
+      const filterMonth = filterMonthEl.value;
+      const filterDescription = filterDescriptionEl.value.toLowerCase();
+
+      let filtered = transactions;
+      if (filterType !== 'all') { filtered = filtered.filter(t => t.type === filterType); }
+      if (filterDate) { filtered = filtered.filter(t => t.date === filterDate); }
+      if (filterMonth !== 'all') { filtered = filtered.filter(t => t.date && t.date.split('-')[1] === filterMonth); }
+      if (filterDescription) { filtered = filtered.filter(t => t.description && t.description.toLowerCase().includes(filterDescription)); }
+
+      renderTransactions(filtered);
+      return filtered;
+    }
+
+    setDateTimeDefaults();
+    populateYearSelect();
+    setupTabs();
+
+    applyFilterBtn.addEventListener('click', applyFilter);
+    resetFilterBtn.addEventListener('click', () => {
+      filterTypeEl.value = 'all'; filterDateEl.value = ''; filterMonthEl.value = 'all'; filterDescriptionEl.value = '';
+      renderTransactions();
+    });
+
+    filterTypeEl.addEventListener('change', applyFilter);
+    filterMonthEl.addEventListener('change', applyFilter);
+    filterDateEl.addEventListener('change', applyFilter);
+    filterDescriptionEl.addEventListener('input', applyFilter);
+
+    document.getElementById('recapYear').addEventListener('change', updateRecap);
+    document.getElementById('recapMonth').addEventListener('change', updateRecap);
+    document.getElementById('recapFilterType').addEventListener('change', updateRecap);
+    document.getElementById('recapFilterDescription').addEventListener('input', updateRecap);
+    document.getElementById('recapFilterStartDate').addEventListener('change', updateRecap);
+    document.getElementById('recapFilterEndDate').addEventListener('change', updateRecap);
+    document.getElementById('applyRecapFilterBtn').addEventListener('click', updateRecap);
+    document.getElementById('resetRecapFilterBtn').addEventListener('click', () => {
+      document.getElementById('recapFilterType').value = 'all';
+      document.getElementById('recapFilterDescription').value = '';
+      document.getElementById('recapFilterStartDate').value = '';
+      document.getElementById('recapFilterEndDate').value = '';
+      updateRecap();
+    });
+
+    infoIcon.addEventListener('click', () => { infoModal.style.display = 'flex'; });
+    closeButton.addEventListener('click', () => { infoModal.style.display = 'none'; });
+    window.addEventListener('click', (event) => { if (event.target === infoModal) { infoModal.style.display = 'none'; } });
+  </script>
+</body>
+</html>
